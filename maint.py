@@ -1,5 +1,6 @@
 from pprint import pprint
 import math
+import numpy as np
 
 def set_many_list(lst_points):
     lst = [_ for _ in lst_points]
@@ -24,6 +25,21 @@ def set_many_list(lst_points):
         answer.append([(_, dct[_]) for _ in dct.keys()])
         dct.clear()
     return answer
+
+def set_list_x_y(lst):
+    x_lst = []
+    y_lst = []
+    for elem in lst:
+        print(elem)
+        for e_ in elem:
+            for e in e_:
+                print(e)
+                x_lst.append(e[0])
+                y_lst.append(-e[1])
+    print('---')
+    pprint((np.asarray(x_lst), np.asarray(y_lst)))
+    print('---')
+    return (np.asarray(x_lst), np.asarray(y_lst))
 
 
 abc = [(_, int(math.sin(_/10)* 100)) for _ in range(-156, 360)]
