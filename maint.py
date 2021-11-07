@@ -10,6 +10,11 @@ def set_many_list(lst_points):
     dct_down = {}
     dct_up_y = {}
     dct_down_y = {}
+
+    dct_up_ = {}
+    dct_down_ = {}
+    dct_up_y_ = {}
+    dct_down_y_ = {}
     answer = []
     # print(type(lst))
     while lst_points:
@@ -18,6 +23,8 @@ def set_many_list(lst_points):
         lst_points = [_ for _ in lst]
         UP, DOWN = True, True
         UP_Y, DOWN_Y = True, True
+        UP_, DOWN_ = True, True
+        UP_Y_, DOWN_Y_ = True, True
         # print(lst_points)
         for i in lst_points:
             DEL = False
@@ -51,11 +58,46 @@ def set_many_list(lst_points):
                 else:
                     # print('break')
                     DOWN_Y = False
+
+
+
+
+                if UP_ and i[0] >= max(dct_up_.keys()) and i[1] <= max(dct_up_.keys()):
+                    dct_up_[i[0]] = i[1]
+                    DEL = True
+                else:
+                    # print('break')
+                    UP_ = False
+
+                if DOWN_ and i[0] <= max(dct_down_.keys()) and i[1] >= max(dct_down_.keys()):
+                    dct_down_[i[0]] = i[1]
+                    DOWN_ = True
+                else:
+                    # print('break')
+                    UP = False
+
+                if UP_Y_ and i[0] >= max(dct_up_y_.keys()) and i[1] <= max(dct_up_y_.keys()):
+                    dct_up_y_[i[0]] = i[1]
+                    DEL = True
+                else:
+                    # print('break')
+                    UP_Y_ = False
+
+                if DOWN_Y_ and i[0] <= max(dct_down_y_.keys()) and i[1] >= max(dct_down_y_.keys()):
+                    dct_down_y_[i[0]] = i[1]
+                    DEL = True
+                else:
+                    # print('break')
+                    DOWN_Y_ = False
             except ValueError:
                 dct_up[i[0]] = i[1]
                 dct_down[i[0]] = i[1]
                 dct_up_y[i[0]] = i[1]
                 dct_down_y[i[0]] = i[1]
+                dct_up_[i[0]] = i[1]
+                dct_down_[i[0]] = i[1]
+                dct_up_y_[i[0]] = i[1]
+                dct_down_y_[i[0]] = i[1]
                 DEL = True
 
             if DEL:
@@ -63,7 +105,9 @@ def set_many_list(lst_points):
             if not UP and not DOWN:
                 break
         list_lst = [[(_, dct_up[_]) for _ in dct_up.keys()], [(_, dct_down[_]) for _ in dct_down.keys()],
-                    [(_, dct_up_y[_]) for _ in dct_up_y.keys()], [(_, dct_down_y[_]) for _ in dct_down_y.keys()]]
+                    [(_, dct_up_y[_]) for _ in dct_up_y.keys()], [(_, dct_down_y[_]) for _ in dct_down_y.keys()],
+                    [(_, dct_up_[_]) for _ in dct_up_.keys()], [(_, dct_down_[_]) for _ in dct_down_.keys()],
+                    [(_, dct_up_y_[_]) for _ in dct_up_y_.keys()], [(_, dct_down_y_[_]) for _ in dct_down_y_.keys()]]
         a = sorted(list_lst, key=lambda x: len(x), reverse=True)
         # print([len(a[i]) for i in range(len(a))])
         answer.append(a[0])
