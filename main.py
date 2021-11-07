@@ -136,6 +136,7 @@ class Window(QMainWindow):
             y1 = [fp[0] * x[i] ** 2 + fp[1] * x[i] + fp[2] for i in range(0, len(x))]  # значения функции a*x**2+b*x+c
             so = round(sum([abs(y[i] - y1[i]) for i in range(0, len(x))]) / (len(x) * sum(y)) * 100, 4)  # средняя ошибка
             print('Average quadratic deviation ' + str(so))
+            print(f'x принадежит от {min(x)}, до {max(x)}')
             fx = np.linspace(x[0], x[-1] + 1, len(x))  # можно установить вместо len(x) большее число для интерполяции
             plt.plot(x, y, 'o', label='Original data', markersize=10)
             plt.plot(fx, f(fx), linewidth=2)
