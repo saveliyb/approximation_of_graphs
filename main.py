@@ -16,7 +16,20 @@ class infinite_scroll_area(QListWidget):  # https://doc.qt.io/qt-5/qlistwidget.h
         super(infinite_scroll_area, self).__init__()
         self.setWindowTitle('Stored')
         for _ in list(read_Sql()):
+            a = [i for i in json.loads(_[2]) if i != None][1:]
+            # print('aaa', a)
             self.addItem(':  '.join([_[1], '   '.join([str(i) for i in json.loads(_[2])[0]])]))
+            try:
+                for j in a:
+                    # print(j)
+                    # print(['   '.join([str(k) for k in j])])
+                    # print(''.join([' ' for i in range(len(_[1]) + 3)]))
+                    # print('a     ', ''.join([''.join([' ' for i in range(len(_[1]) + 3)]), '   '.join([str(k) for k in j])]))
+                    self.addItem(''.join([''.join([' ' for i in range(len(_[1]) + 3)]), '   '.join([str(k) for k in j])]))
+            except:
+                pass
+
+            # self.addItem(':  '.join([_[1], '   '.join([str(i) for i in json.loads(_[2])[0]])]))
         self.verticalScrollBar()
         # self.show()
 
@@ -113,7 +126,6 @@ class Window(QMainWindow):
     def save(self):
         filePath, _ = QFileDialog.getSaveFileName(self, "Save Image", "",
                                                   "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
-        print('amogus')
         # print(filePath, _)
         name = filePath.split('/')[-1].split('.')[0]
         write_sql(name, self.coefficients)
