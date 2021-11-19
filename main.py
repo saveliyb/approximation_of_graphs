@@ -194,7 +194,7 @@ class Window(QMainWindow):
         except IndexError:
             pass
 
-    def def_coefficientslisting_show(self, coefficients):
+    def def_coefficientslisting_show(self):
         """the function displays the parabola equations of the drawing"""
         self.coefficientslisting = coefficients_list(self.coefficients, self.x_belongs)
         self.coefficientslisting.show()
@@ -224,6 +224,7 @@ class Window(QMainWindow):
                 pass
         else:
             self.appr()
+            self.def_coefficientslisting_show()
             self.save()
 
     def appr(self):
