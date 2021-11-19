@@ -1,16 +1,12 @@
-# from PyQt5.QtWidgets import *
-# from PyQt5.QtGui import *
-# from PyQt5.QtCore import *
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QAction, QListWidget
 from PyQt5.QtGui import QImage, QPainter, QPen
 from PyQt5.QtCore import Qt, QPoint
 from maint import *
 import numpy as np
-import scipy as sp
 import matplotlib.pyplot as plt
 from sqlFunc import *
-from functools import partial
+
 
 class history(QListWidget):
     '''widget class for displaying the history list'''
@@ -18,12 +14,13 @@ class history(QListWidget):
         super(history, self).__init__()
         self.setGeometry(1000, 100, 500, 300)
         self.setWindowTitle('Stored')
-        self.format_history()
+        self.update_Widget()
 
     def format_history(self):
         '''this function converts the history into a format for output'''
         for _ in list(read_Sql()):
             data = [i for i in json.loads(_[2]) if i]
+            data_x = [i for i in json.loads(_[3]) if i]
             try:
                 lenght_name = len(_[1] + '   :   ')
 
@@ -32,15 +29,20 @@ class history(QListWidget):
                 string_ans += ' x '
                 string_ans += plus_or_minus(str(data[0][2])) + str(abs(float(data[0][2])))
                 string_ans += ' = y'
+                string_ans += '\t'
+                string_ans += u'x \u2208 ' + f'{data_x[0][0]}; {data_x[0][1]}'
                 self.addItem(string_ans)
-
+                k = 1  # counter for the cycle
                 for j in data[1:]:
                     string_ans = ''.join([' ' for k in range(lenght_name)]) + '      x' + U'\u00B2 '
                     string_ans += plus_or_minus(str(j[1])) + str(abs(float(j[1])))
                     string_ans += ' x '
                     string_ans += plus_or_minus(str(j[2])) + str(abs(float(j[2])))
                     string_ans += ' = y'
+                    string_ans += '\t'
+                    string_ans += u'x \u2208 ' + f'{data_x[k][0]}; {data_x[k][1]}'
                     self.addItem(string_ans)
+                    k += 1
             except:
                 pass
 
@@ -48,11 +50,17 @@ class history(QListWidget):
                 self.addItem('')
         self.verticalScrollBar()
 
+    def update_Widget(self):
+        self.clear()
+        self.format_history()
+        self.update()
+
 
 class coefficients_list(QListWidget):
     '''widget class for displaying a list of the equations obtained from the drawing'''
-    def __init__(self, coefficients):
+    def __init__(self, coefficients, x_belong):
         super(coefficients_list, self).__init__()
+        self.x_belong = x_belong
         self.multiplier = [i for i in coefficients if i != None]
         self.setWindowTitle('coefficients')
         self.setGeometry(1510, 100, 400, 100)
@@ -67,7 +75,8 @@ class coefficients_list(QListWidget):
             string_ans += ' x '
             string_ans += plus_or_minus(str(self.multiplier[i][2])) + str(abs(float(self.multiplier[i][2])))
             string_ans += ' = y'
-            # string_ans += '\t\t' + U'\u2208' + f'[ {self.x_belongs[0]} ; {self.x_belongs[1]} ]'
+            string_ans += '\t'
+            string_ans += u'x \u2208 ' + f'{self.x_belong[i][0]}; {self.x_belong[i][1]}'
             self.addItem(string_ans)
 
 
@@ -76,6 +85,7 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         create_table_sql()
+        self.x_belongs = []
         self.coefficients = []
         self.setWindowTitle("Paint")
 
@@ -158,9 +168,9 @@ class Window(QMainWindow):
     def undo(self):
         ''' function cancels the last drawn element'''
         try:
-            print(len(self.answer_lst))
+            # print(len(self.answer_lst))
             points = self.answer_lst[-1]
-            print(points)
+            # print(points)
             self.answer_lst = self.answer_lst[:-1]
             for i in points:
                 painter = QPainter(self.image)
@@ -170,7 +180,7 @@ class Window(QMainWindow):
                     painter.drawPoint(i[0] + point, i[1])
                     painter.drawPoint(i[0] + point, i[1])
                     painter.drawPoint(i[0] + point, i[1])
-                    print(f'point {point + 1}')
+                    # print(f'point {point + 1}')
                 self.update()
         except IndexError:
             pass
@@ -178,38 +188,41 @@ class Window(QMainWindow):
 
     def def_coefficientslisting_show(self, coefficients):
         '''the function displays the parabola equations of the drawing'''
-        print(self.coefficients)
-        self.coefficientslisting = coefficients_list(self.coefficients)
+        # print(self.coefficients)
+        self.coefficientslisting = coefficients_list(self.coefficients, self.x_belongs)
         # self.coefficientslisting.coefficients = self.coefficients
         self.coefficientslisting.show()
 
     def stored_show(self):
         '''the function displays the history of saved equations'''
-        # a = history()
-        self.widget = history()
-        self.widget.show()
+        self.widget_history = history()
+        self.widget_history.show()
 
     def save(self):
         '''saves the image and parabola equations to the database'''
         filePath, _ = QFileDialog.getSaveFileName(self, "Save Image", "",
                                                   "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
-        # print(filePath, _)
         name = filePath.split('/')[-1].split('.')[0]
-        write_sql(name, self.coefficients)
+        write_sql(name, self.coefficients, self.x_belongs)
         if filePath == "":
             return
         self.image.save(filePath)
+        try:
+            self.widget_history.update_Widget()
+        except:
+            pass
 
     def appr(self):
         '''a function for calling the approximation function and passing the necessary arguments to it'''
         lst = []
+
         for i in range(len(self.answer_lst)):
             a = set_list_x_y([set_many_list(self.answer_lst[i])])
+            [self.x_belongs.append(_) for _ in a[-1]]
+            a = a[:2]
             for _ in range(len(a[0])):
                 lst.append(self.mnkGP(np.asarray(a[0][_]), np.asarray(a[1][_])))
         self.coefficients = [_ for _ in lst]
-        # self.coefficients_listing(self.coefficients)
-
 
     def make_poly(self, x, coefs):
         '''generate a polynomial from an array of coefficients'''
@@ -230,29 +243,22 @@ class Window(QMainWindow):
 
     def mnkGP(self, x, y):
         ''''approximation function'''
-        # print(f'x\n{x}', f'y\n{y}', sep='\n-------\n')
         if x != []:
-            d = 2  # степень полинома
-            fp, residuals, rank, sv, rcond = np.polyfit(x, y, d, full=True)  # Модель
-            f = np.poly1d(fp)  # аппроксимирующая функция
+            d = 2  # '''displays the points taken for approximation'''
+            fp, residuals, rank, sv, rcond = np.polyfit(x, y, d, full=True)
+            f = np.poly1d(fp)
             coefficients = [round(fp[0], 4), round(fp[1], 4), round(fp[2], 4)]
 
-            # print('Коэффициент -- a %s  ' % round(fp[0], 4))
-            # print('Коэффициент-- b %s  ' % round(fp[1], 4))
-            # print('Коэффициент -- c %s  ' % round(fp[2], 4))
-            # y1 = [fp[0] * x[i] ** 2 + fp[1] * x[i] + fp[2] for i in range(0, len(x))]  # значения функции a*x**2+b*x+c
-            # so = round(sum([abs(y[i] - y1[i]) for i in range(0, len(x))]) / (len(x) * sum(y)) * 100, 4)  # средняя ошибка
-            # print('Average quadratic deviation ' + str(so))
+            '''displays the points taken for approximation'''
             # print(f'x принадежит от {min(x)}, до {max(x)}')
-            fx = np.linspace(x[0], x[-1] + 1, len(x))  # можно установить вместо len(x) большее число для интерполяции
+
+            fx = np.linspace(x[0], x[-1] + 1, len(x))
             plt.plot(x, y, 'o', label='Original data', markersize=10)
             plt.plot(fx, f(fx), linewidth=2)
             plt.grid(True)
             plt.show()
 
             return coefficients
-
-
 
 
 App = QApplication(sys.argv)
